@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Headshot Editor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: #fafafa;
+        }
+        .upload-section.dragover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .upload-btn:hover {
+            background: #45a049;
+        }
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .canvas-container {
+            position: relative;
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .controls {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .control-group {
+            margin-bottom: 25px;
+        }
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .range-value {
+            display: inline-block;
+            min-width: 40px;
+            text-align: right;
+            font-weight: 500;
+            color: #666;
+        }
+        .background-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .bg-option {
+            height: 50px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .bg-option:hover {
+            transform: scale(1.05);
+        }
+        .bg-option.active {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #4CAF50;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        .btn-reset {
+            background: #f44336;
+            color: white;
+        }
+        .btn-reset:hover {
+            background: #da190b;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Professional Headshot Editor</h1>
+        <p class="subtitle">Upload your photo and adjust it for professional use</p>
+
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ul>
+                <li>Upload your photo using the button below or drag and drop</li>
+                <li>Adjust brightness, contrast, and saturation for optimal lighting</li>
+                <li>Choose a professional neutral background color</li>
+                <li>Use the zoom slider to crop and focus on your face</li>
+                <li>Download your edited professional headshot</li>
+            </ul>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <p style="font-size: 18px; margin-bottom: 20px;">📸 Drop your image here or click to upload</p>
+            <input type="file" id="fileInput" accept="image/*">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Choose Image
+            </button>
+        </div>
+
+        <div class="editor-grid" id="editorGrid" style="display: none;">
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label>🔆 Brightness: <span class="range-value" id="brightnessValue">0</span></label>
+                    <input type="range" id="brightness" min="-50" max="50" value="0">
+                </div>
+
+                <div class="control-group">
+                    <label>⚡ Contrast: <span class="range-value" id="contrastValue">100</span>%</label>
+                    <input type="range" id="contrast" min="50" max="200" value="100">
+                </div>
+
+                <div class="control-group">
+                    <label>🎨 Saturation: <span class="range-value" id="saturationValue">100</span>%</label>
+                    <input type="range" id="saturation" min="50" max="150" value="100">
+                </div>
+
+                <div class="control-group">
+                    <label>🔍 Zoom & Crop: <span class="range-value" id="zoomValue">100</span>%</label>
+                    <input type="range" id="zoom" min="100" max="200" value="100">
+                </div>
+
+                <div class="control-group">
+                    <label>↕️ Vertical Position: <span class="range-value" id="posYValue">0</span></label>
+                    <input type="range" id="posY" min="-100" max="100" value="0">
+                </div>
+
+                <div class="control-group">
+                    <label>↔️ Horizontal Position: <span class="range-value" id="posXValue">0</span></label>
+                    <input type="range" id="posX" min="-100" max="100" value="0">
+                </div>
+
+                <div class="control-group">
+                    <label>🎨 Professional Background</label>
+                    <div class="background-options">
+                        <div class="bg-option active" style="background: #f5f5f5;" data-color="#f5f5f5" title="Light Gray"></div>
+                        <div class="bg-option" style="background: #ffffff;" data-color="#ffffff" title="White"></div>
+                        <div class="bg-option" style="background: #e8e8e8;" data-color="#e8e8e8" title="Soft Gray"></div>
+                        <div class="bg-option" style="background: #2c3e50;" data-color="#2c3e50" title="Dark Blue"></div>
+                        <div class="bg-option" style="background: #34495e;" data-color="#34495e" title="Slate"></div>
+                        <div class="bg-option" style="background: #1a1a1a;" data-color="#1a1a1a" title="Charcoal"></div>
+                        <div class="bg-option" style="background: #ecf0f1;" data-color="#ecf0f1" title="Cloud"></div>
+                        <div class="bg-option" style="background: #3498db;" data-color="#3498db" title="Professional Blue"></div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-reset" onclick="resetAll()">Reset All</button>
+                    <button class="btn btn-secondary" onclick="resetImage()">New Image</button>
+                    <button class="btn btn-primary" onclick="downloadImage()">💾 Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canvas, ctx, originalImage, currentBgColor = '#f5f5f5';
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const editorGrid = document.getElementById('editorGrid');
+
+        // Drag and drop functionality
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                loadImage(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadImage(file);
+            }
+        });
+
+        function loadImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage = new Image();
+                originalImage.onload = () => {
+                    initCanvas();
+                    uploadSection.style.display = 'none';
+                    editorGrid.style.display = 'grid';
+                    applyFilters();
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = 500;
+            canvas.height = 500;
+        }
+
+        // Add event listeners for all controls
+        ['brightness', 'contrast', 'saturation', 'zoom', 'posY', 'posX'].forEach(id => {
+            const input = document.getElementById(id);
+            const valueSpan = document.getElementById(id + 'Value');
+            input.addEventListener('input', () => {
+                let value = input.value;
+                if (id === 'contrast' || id === 'saturation' || id === 'zoom') {
+                    valueSpan.textContent = value + '%';
+                } else {
+                    valueSpan.textContent = value;
+                }
+                applyFilters();
+            });
+        });
+
+        // Background color selection
+        document.querySelectorAll('.bg-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.bg-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                currentBgColor = option.dataset.color;
+                applyFilters();
+            });
+        });
+
+        function applyFilters() {
+            if (!originalImage) return;
+
+            const brightness = parseInt(document.getElementById('brightness').value);
+            const contrast = parseInt(document.getElementById('contrast').value);
+            const saturation = parseInt(document.getElementById('saturation').value);
+            const zoom = parseInt(document.getElementById('zoom').value) / 100;
+            const posY = parseInt(document.getElementById('posY').value);
+            const posX = parseInt(document.getElementById('posX').value);
+
+            // Clear canvas with background color
+            ctx.fillStyle = currentBgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Calculate dimensions for cropping and zooming
+            const scale = zoom;
+            const sw = originalImage.width / scale;
+            const sh = originalImage.height / scale;
+            const sx = (originalImage.width - sw) / 2 + (posX * originalImage.width / 400);
+            const sy = (originalImage.height - sh) / 2 + (posY * originalImage.height / 400);
+
+            // Draw image
+            ctx.save();
+            ctx.filter = `brightness(${100 + brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+            
+            // Draw the zoomed and positioned image
+            ctx.drawImage(originalImage, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            
+            ctx.restore();
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'professional-headshot.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function resetAll() {
+            document.getElementById('brightness').value = 0;
+            document.getElementById('contrast').value = 100;
+            document.getElementById('saturation').value = 100;
+            document.getElementById('zoom').value = 100;
+            document.getElementById('posY').value = 0;
+            document.getElementById('posX').value = 0;
+            
+            document.getElementById('brightnessValue').textContent = '0';
+            document.getElementById('contrastValue').textContent = '100%';
+            document.getElementById('saturationValue').textContent = '100%';
+            document.getElementById('zoomValue').textContent = '100%';
+            document.getElementById('posYValue').textContent = '0';
+            document.getElementById('posXValue').textContent = '0';
+            
+            applyFilters();
+        }
+
+        function resetImage() {
+            uploadSection.style.display = 'block';
+            editorGrid.style.display = 'none';
+            fileInput.value = '';
+            originalImage = null;
+            resetAll();
+        }
+    </script>
+</body>
+</html>
